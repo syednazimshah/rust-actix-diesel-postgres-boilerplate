@@ -1,9 +1,12 @@
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use modules::users;
 use serde::Serialize;
+
 mod config;
 mod repository;
 mod modules;
+// mod middleware;
+
 use crate::config::config::config::*;
 
 #[derive(Serialize)]
@@ -19,7 +22,6 @@ async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(response)
 }
 
-
 async fn not_found() -> Result<HttpResponse> {
     let response = Response {
         message: "Resource not found".to_string(),
@@ -33,17 +35,15 @@ async fn main() -> std::io::Result<()> {
     println!("\nRunning in {}\n",MODE);
     
     let user_db = repository::database::Database::new();
-    
-    let result = user_db.run_migrations();
-    match result {
-        Ok(_res)=>{
-           println!("Migrations Run Successful: {:?}\n", _res)
-        }
-        Err(err)=>{
-            println!("Migrations Run Failed: {:?}\n", err)
-        }
+
+    match user_db.run_migrations() {
+        Ok(res) if res.is_empty() => println!("No new migrations were run.\n"),
+        Ok(res) => println!("✅ Ran migrations: {:?}\n", res),
+        Err(err) => panic!("❌ Migration failed: {}\n", err),
     }
     let app_data = web::Data::new(user_db);
+
+    print!("Starting Actix server on port {}...\n", PORT);
 
     HttpServer::new(move ||
         App::new()

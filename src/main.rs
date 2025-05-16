@@ -6,6 +6,7 @@ mod config;
 mod repository;
 mod modules;
 // mod middleware;
+mod helpers;
 
 use crate::config::config::config::*;
 
@@ -17,7 +18,7 @@ pub struct Response {
 #[get("/health")]
 async fn healthcheck() -> impl Responder {
     let response = Response {
-        message: "Everything is working fine".to_string(),
+        message: "Actix is up and running".to_string(),
     };
     HttpResponse::Ok().json(response)
 }

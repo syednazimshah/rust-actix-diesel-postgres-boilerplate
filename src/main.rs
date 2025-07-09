@@ -5,8 +5,7 @@ use serde::Serialize;
 mod config;
 mod repository;
 mod modules;
-// mod middleware;
-mod helpers;
+mod auth;
 
 use crate::config::config::config::*;
 
@@ -23,11 +22,11 @@ async fn healthcheck() -> impl Responder {
     HttpResponse::Ok().json(response)
 }
 
-async fn not_found() -> Result<HttpResponse> {
+async fn unauthorized() -> Result<HttpResponse> {
     let response = Response {
-        message: "Resource not found".to_string(),
+        message: "Unauthorized".to_string(),
     };
-    Ok(HttpResponse::NotFound().json(response))
+    Ok(HttpResponse::Unauthorized().json(response))
 }
 
 #[actix_web::main]
@@ -51,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_data.clone())
             .configure(users::api::users_config)
             .service(healthcheck)
-            .default_service(web::route().to(not_found))
+            .default_service(web::route().to(unauthorized))
             .wrap(actix_web::middleware::Logger::default())
     )
         .bind(("127.0.0.1", PORT))?

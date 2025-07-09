@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation, Algorithm, TokenData};
 use chrono::{Utc, Duration};
-
-const SECRET_KEY: &[u8] = b"your-very-secret-key-123456";
+use crate::config::config::config::{JWT_SECRET, JWT_EXPIRATION};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -13,7 +12,7 @@ pub struct Claims {
 
 pub fn generate_jwt_token(user_id: &i32, role: &str) -> String {
     let expiration = Utc::now()
-        .checked_add_signed(Duration::minutes(60))
+        .checked_add_signed(Duration::seconds(JWT_EXPIRATION))
         .expect("valid timestamp")
         .timestamp() as usize;
 
@@ -26,14 +25,14 @@ pub fn generate_jwt_token(user_id: &i32, role: &str) -> String {
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(SECRET_KEY),
+        &EncodingKey::from_secret(JWT_SECRET),
     ).expect("JWT token creation failed")
 }
 
 pub fn verify_jwt(token: &str) -> Option<TokenData<Claims>> {
     decode::<Claims>(
         token,
-        &DecodingKey::from_secret(SECRET_KEY),
+        &DecodingKey::from_secret(JWT_SECRET),
         &Validation::new(Algorithm::HS256),
     ).ok()
 }

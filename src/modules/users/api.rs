@@ -3,6 +3,8 @@ use actix_web::http::Method;
 use crate::repository::database::Database;
 use super::model::*;
 use crate::auth::auth::auth_guard;
+use crate::config::config::config::JWT_EXPIRATION;
+use serde_json::json;
 
 pub async fn create_user(db: web::Data<Database>, new_user: web::Json<CreateUser>) -> HttpResponse {
     let user = db.create_user(new_user.into_inner());
@@ -39,7 +41,7 @@ pub async fn delete_user_by_id(db: web::Data<Database>, id: web::Path<i32>) -> H
     }
 }
 
-pub async fn update_user_by_id(db: web::Data<Database>, id: web::Path<i32>, updated_user: web::Json<User>) -> HttpResponse {
+pub async fn update_user_by_id(db: web::Data<Database>, id: web::Path<i32>, updated_user: web::Json<UpdateUser>) -> HttpResponse {
     let user = db.update_user_by_id(&id, updated_user.into_inner());
     match user {
         Ok(user) => HttpResponse::Ok().json(user),
@@ -50,7 +52,10 @@ pub async fn update_user_by_id(db: web::Data<Database>, id: web::Path<i32>, upda
 pub async fn login_user(db: web::Data<Database>, login_user: web::Json<UserLogin>) -> HttpResponse {
     let result = db.login_user(login_user.into_inner());
     match result {
-        Ok(token) => HttpResponse::Ok().json(token),
+        Ok(token) => HttpResponse::Ok().json(json!({
+            "token": token,
+            "expires_in_sec": JWT_EXPIRATION
+        })),
         Err(_e) => HttpResponse::Unauthorized().body("Invalid email or password"),
     }
 }

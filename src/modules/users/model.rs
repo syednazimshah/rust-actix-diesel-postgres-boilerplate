@@ -36,6 +36,19 @@ pub struct CreateUser {
     pub updated_at: Option<NaiveDateTime>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Insertable, AsChangeset)]
+#[diesel(table_name = crate::repository::schema::users)]
+pub struct UpdateUser {
+    pub email: Option<String>,
+    pub role: Option<String>,
+    pub full_name: Option<String>,
+    pub date_of_birth: Option<chrono::NaiveDate>,
+    pub profile_picture_url: Option<String>,
+    pub bio: Option<String>,
+    pub is_verified: Option<bool>,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserLogin {
     pub email: String,

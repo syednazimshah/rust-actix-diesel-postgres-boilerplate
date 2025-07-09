@@ -1,9 +1,10 @@
 use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::{SaltString, PasswordHash, PasswordVerifier};
+use crate::config::config::config::HASH_SALT;
 
 pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
     // Generate a random salt
-    let salt = SaltString::from_b64("c29tZV9yYW5kb21fc2FsdA").unwrap(); // Base64 string
+    let salt = SaltString::from_b64(HASH_SALT).unwrap(); // Base64 string
 
     // Create Argon2 hasher with default parameters
     let argon2 = Argon2::default();

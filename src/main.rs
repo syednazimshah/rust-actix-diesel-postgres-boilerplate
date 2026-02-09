@@ -2,10 +2,11 @@ use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use modules::users;
 use serde::Serialize;
 
-mod config;
-mod repository;
-mod modules;
 mod auth;
+mod config;
+mod middleware;
+mod modules;
+mod repository;
 
 use crate::config::config::config::*;
 
@@ -31,9 +32,8 @@ async fn unauthorized() -> Result<HttpResponse> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("\nRunning in {}\n", MODE);
 
-    println!("\nRunning in {}\n",MODE);
-    
     let user_db = repository::database::Database::new();
 
     match user_db.run_migrations() {
@@ -45,15 +45,15 @@ async fn main() -> std::io::Result<()> {
 
     print!("Starting Actix server on port {}...\n", PORT);
 
-    HttpServer::new(move ||
+    HttpServer::new(move || {
         App::new()
             .app_data(app_data.clone())
             .configure(users::api::users_config)
             .service(healthcheck)
             .default_service(web::route().to(unauthorized))
-            .wrap(actix_web::middleware::Logger::default())
-    )
-        .bind(("127.0.0.1", PORT))?
-        .run()
-        .await
+            .wrap(middleware::logging::Logging)
+    })
+    .bind(("127.0.0.1", PORT))?
+    .run()
+    .await
 }
